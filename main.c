@@ -25,6 +25,19 @@
 #define BG_YELLOW "\033[43m"
 #define DARK_GREY "\033[90m"
 
+void print_help() {
+    printf("Usage: calendar [OPTIONS]\n");
+    printf("\nDisplay a calendar centered on the current week with customizable range.\n");
+    printf("\nOptions:\n");
+    printf("  --help              Display this help message and exit\n");
+    printf("  --weeks-before N    Show N weeks before current week (default: 2, max: %d)\n", MAX_WEEKS);
+    printf("  --weeks-after N     Show N weeks after current week  (default: 4, max: %d)\n", MAX_WEEKS);
+    printf("\nOutput:\n");
+    printf("  - Current day is highlighted in yellow\n");
+    printf("  - Current week's month is shown in normal text\n");
+    printf("  - Other weeks' months are shown in grey\n");
+}
+
 int my_localtime(struct tm *result, const time_t *timep) {
 #if defined(_WIN32) || defined(_WIN64)
     // localtime_s returns 0 on success.
@@ -40,7 +53,11 @@ void parse_args(int argc, char* argv[], int* weeks_before, int* weeks_after) {
     *weeks_after = 4;
 
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--weeks-before") == 0 && i + 1 < argc) {
+        if (strcmp(argv[i], "--help") == 0) {
+            print_help();
+            exit(0);
+        }
+        else if (strcmp(argv[i], "--weeks-before") == 0 && i + 1 < argc) {
             char* endptr;
             errno = 0;
             long val = strtol(argv[i + 1], &endptr, 10);
@@ -57,6 +74,11 @@ void parse_args(int argc, char* argv[], int* weeks_before, int* weeks_after) {
                 *weeks_after = (int)val;
             }
             i++;
+        }
+        else {
+            printf("Unknown option: %s\n", argv[i]);
+            printf("Use --help for usage information\n");
+            exit(1);
         }
     }
 }
@@ -110,7 +132,7 @@ void print_week(time_t start_time, int is_current_week, char* buffer, size_t siz
         memset(&base, 0, sizeof(base));
     }
     static const char* month_names[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+                                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     int pos = 0;
 
     // Cache the week's dates using tm arithmetic.
@@ -169,6 +191,7 @@ int main(int argc, char* argv[]) {
 
     if (weeks_before < 0 || weeks_after < 0 || weeks_before > MAX_WEEKS || weeks_after > MAX_WEEKS) {
         printf("Error: Weeks before/after must be between 0 and %d\n", MAX_WEEKS);
+        printf("Use --help for usage information\n");
         return 1;
     }
 
