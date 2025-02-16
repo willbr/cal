@@ -48,9 +48,24 @@ int my_localtime(struct tm *result, const time_t *timep) {
 #endif
 }
 
+int parse_number_arg(const char* arg_str, const char* arg_name, int* result) {
+    char* endptr;
+    errno = 0;
+    long val = strtol(arg_str, &endptr, 10);
+
+    if (errno != 0 || *endptr != '\0') {
+        printf("Error: Invalid value for %s: %s\n", arg_name, arg_str);
+        printf("Use --help for usage information\n");
+        return 1;
+    }
+
+    *result = (int)val;
+    return 0;
+}
+
 void parse_args(int argc, char* argv[], int* weeks_before, int* weeks_after) {
     *weeks_before = 2;
-    *weeks_after = 4;
+    *weeks_after  = 4;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--help") == 0) {
@@ -58,20 +73,14 @@ void parse_args(int argc, char* argv[], int* weeks_before, int* weeks_after) {
             exit(0);
         }
         else if (strcmp(argv[i], "--weeks-before") == 0 && i + 1 < argc) {
-            char* endptr;
-            errno = 0;
-            long val = strtol(argv[i + 1], &endptr, 10);
-            if (errno == 0 && *endptr == '\0') {
-                *weeks_before = (int)val;
+            if (parse_number_arg(argv[i + 1], "--weeks-before", weeks_before)) {
+                exit(1);
             }
             i++;
         }
         else if (strcmp(argv[i], "--weeks-after") == 0 && i + 1 < argc) {
-            char* endptr;
-            errno = 0;
-            long val = strtol(argv[i + 1], &endptr, 10);
-            if (errno == 0 && *endptr == '\0') {
-                *weeks_after = (int)val;
+            if (parse_number_arg(argv[i + 1], "--weeks-after", weeks_after)) {
+                exit(1);
             }
             i++;
         }
